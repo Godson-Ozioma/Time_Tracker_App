@@ -6,8 +6,9 @@ import '../models/task_model.dart';
 import 'dart:convert';
 
 class TimeEntryProvider with ChangeNotifier {
+  final LocalStorage storage;
   //Create a list to store Time Entries
-  final List<TimeEntry> _entries = [];
+  List<TimeEntry> _entries = [];
 
   //Create a list to store Projects, and add some projects to list of Projects
   final List<Project> _projects = [
@@ -27,15 +28,53 @@ class TimeEntryProvider with ChangeNotifier {
   List<Project> get projects => _projects;
   List<Task> get tasks => _tasks;
 
-  TimeEntryProvider(LocalStorage localStorage);
-  
+  TimeEntryProvider(this.storage) {
+    _loadTimeEntryFromStorage();
+  }
+
+  void _loadTimeEntryFromStorage() async {
+    // await storage.ready;
+    var storedEntries = storage.getItem('entries');
+    //check if local storage is empty
+    if (storedEntries != null) {
+      _entries = List<TimeEntry>.from(
+        (storedEntries as List).map((item) => TimeEntry.fromJson(item)),
+      );
+      notifyListeners();
+    }
+  }
+
   void addTimeEntry(TimeEntry entry) {
     _entries.add(entry);
+    _saveTimeEntryToStorage();
     notifyListeners();
   }
 
+  void _saveTimeEntryToStorage() {
+    storage.setItem(
+      'entries',
+      jsonEncode(_entries.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  //add or update an entry
+  void addOrUpdateTimeEntry(TimeEntry entry) {
+    int index = _entries.indexWhere((e) => e.id == entry.id);
+    if (index != -1) {
+      // Update existing entry
+      _entries[index] = entry;
+    } else {
+      // Add new entry
+      _entries.add(entry);
+    }
+    _saveTimeEntryToStorage(); // Save the updated list to local storage
+    notifyListeners(); //notify listeners of a new change
+  }
+
+  //delete a time entry
   void deleteTimeEntry(String id) {
     _entries.removeWhere((entry) => entry.id == id);
+    _saveTimeEntryToStorage();//update the local storage of new changes
     notifyListeners();
   }
 
@@ -50,17 +89,20 @@ class TimeEntryProvider with ChangeNotifier {
   //delete a project
   void deleteProject(String id) {
     _projects.removeWhere((project) => project.id == id);
+    notifyListeners();
   }
 
+  //add a task to the list of tasks
   void addTask(Task task) {
     if (!_tasks.any((cat) => cat.name == task.name)) {
       _tasks.add(task);
     }
+    notifyListeners();
   }
 
   //delete a task
   void deleteTask(String id) {
     _tasks.removeWhere((task) => task.id == id);
+    notifyListeners();
   }
-
 }

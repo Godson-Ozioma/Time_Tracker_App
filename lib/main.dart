@@ -34,11 +34,7 @@ class MyApp extends StatelessWidget {
           '/': (context) => HomeScreen(),
           '/manage_projects': (context) => ManageProjectsScreen(),
           '/manage_tasks': (context) => ManageTasksScreen(),
-          // Main entry point, HomeScreen
-          // '/manage_categories': (context) =>
-          //     CategoryManagementScreen(), // Route for managing categories
-          // '/manage_tags': (context) =>
-          //     TagManagementScreen(), // Route for managing tags
+         
         },
         // Removed 'home:' since 'initialRoute' is used to define the home route
       ),
