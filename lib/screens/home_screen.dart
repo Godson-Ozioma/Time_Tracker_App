@@ -81,20 +81,20 @@ class _HomeScreenState extends State<HomeScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          //buildExpensesByDate(context),
-          //buildExpensesByCategory(context),
+          // buildTimeEntryByAllEntries(context),
+          // buildTimeEntryByProjects(context),
         ],
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: Colors.deepPurple,
-      //   // onPressed:
-      //   //     () => Navigator.push(
-      //   //       context,
-      //   //       // MaterialPageRoute(builder: (context) => AddTimeEntryScreen()),
-      //   //     ),
-      //   tooltip: 'Add Time Entry',
-      //   child: Icon(Icons.add),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.deepPurple,
+        onPressed:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddTimeEntryScreen()),
+            ),
+        tooltip: 'Add Time Entry',
+        child: Icon(Icons.add),
+      ),
     );
   }
 
