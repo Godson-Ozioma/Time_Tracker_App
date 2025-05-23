@@ -80,10 +80,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          // buildTimeEntryByAllEntries(context),
-          // buildTimeEntryByProjects(context),
-        ],
+        children: [buildEntriesByAll(context), buildEntriesByProject(context)],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepPurple,
@@ -98,114 +95,141 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Widget buildExpensesByDate(BuildContext context) {
-  //   return Consumer<TimeEntryProvider>(
-  //     builder: (context, provider, child) {
-  //       if (provider.expenses.isEmpty) {
-  //         return Center(
-  //           child: Text("Click the + button to record expenses.",
-  //               style: TextStyle(color: Colors.grey[600], fontSize: 18)),
-  //         );
-  //       }
-  //       return ListView.builder(
-  //         itemCount: provider.expenses.length,
-  //         itemBuilder: (context, index) {
-  //           final expense = provider.expenses[index];
-  //           String formattedDate =
-  //               DateFormat('MMM dd, yyyy').format(expense.date);
-  //           return Dismissible(
-  //             key: Key(expense.id),
-  //             direction: DismissDirection.endToStart,
-  //             onDismissed: (direction) {
-  //               provider.removeExpense(expense.id);
-  //             },
-  //             background: Container(
-  //               color: Colors.red,
-  //               padding: EdgeInsets.symmetric(horizontal: 20),
-  //               alignment: Alignment.centerRight,
-  //               child: Icon(Icons.delete, color: Colors.white),
-  //             ),
-  //             child: Card(
-  //               color: Colors.purple[50],
-  //               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-  //               child: ListTile(
-  //                 title: Text(
-  //                     "${expense.payee} - \$${expense.amount.toStringAsFixed(2)}"),
-  //                 subtitle: Text(
-  //                     "$formattedDate - Category: ${getCategoryNameById(context, expense.categoryId)}"),
-  //                 isThreeLine: true,
-  //               ),
-  //             ),
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
+  Widget buildEntriesByAll(BuildContext context) {
+    return Consumer<TimeEntryProvider>(
+      builder: (context, provider, child) {
+        if (provider.entries.isEmpty) {
+          return Center(
+            child: Text(
+              "Click the + button to record time entries.",
+              style: TextStyle(color: Colors.grey[600], fontSize: 18),
+            ),
+          );
+        }
+        return ListView.builder(
+          itemCount: provider.entries.length,
+          itemBuilder: (context, index) {
+            final entry = provider.entries[index];
+            final formattedDate = DateFormat('MMM dd, yyyy').format(entry.date);
+            return Dismissible(
+              key: Key(entry.id),
+              direction: DismissDirection.endToStart,
+              onDismissed: (direction) {
+                provider.deleteTimeEntry(entry.id);
+              },
+              background: Container(
+                color: Colors.red,
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                alignment: Alignment.centerRight,
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              child: Card(
+                color: Colors.purple[50],
+                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                child: ListTile(
+                  title: Text(
+                    "${getProjectNameById(context, entry.projectId)}: ${entry.totalTime.toStringAsFixed(2)} hrs",
+                  ),
+                  subtitle: Text(
+                    "$formattedDate — Task: ${getTaskNameById(context, entry.taskId)}",
+                  ),
+                  isThreeLine: true,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
-  // Widget buildExpensesByCategory(BuildContext context) {
-  //   return Consumer<ExpenseProvider>(
-  //     builder: (context, provider, child) {
-  //       if (provider.expenses.isEmpty) {
-  //         return Center(
-  //           child: Text("Click the + button to record expenses.",
-  //               style: TextStyle(color: Colors.grey[600], fontSize: 18)),
-  //         );
-  //       }
+  Widget buildEntriesByProject(BuildContext context) {
+    return Consumer<TimeEntryProvider>(
+      builder: (context, provider, child) {
+        if (provider.entries.isEmpty) {
+          return Center(
+            child: Text(
+              "Click the + button to record time entries.",
+              style: TextStyle(color: Colors.grey[600], fontSize: 18),
+            ),
+          );
+        }
 
-  //       // Grouping expenses by category
-  //       var grouped = groupBy(provider.expenses, (Expense e) => e.categoryId);
-  //       return ListView(
-  //         children: grouped.entries.map((entry) {
-  //           String categoryName = getCategoryNameById(
-  //               context, entry.key); // Ensure you implement this function
-  //           double total = entry.value.fold(
-  //               0.0, (double prev, Expense element) => prev + element.amount);
-  //           return Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: <Widget>[
-  //               Padding(
-  //                 padding: EdgeInsets.all(8.0),
-  //                 child: Text(
-  //                   "$categoryName - Total: \$${total.toStringAsFixed(2)}",
-  //                   style: TextStyle(
-  //                     fontSize: 18,
-  //                     fontWeight: FontWeight.bold,
-  //                     color: Colors.deepPurple,
-  //                   ),
-  //                 ),
-  //               ),
-  //               ListView.builder(
-  //                 physics:
-  //                     NeverScrollableScrollPhysics(), // to disable scrolling within the inner list view
-  //                 shrinkWrap:
-  //                     true, // necessary to integrate a ListView within another ListView
-  //                 itemCount: entry.value.length,
-  //                 itemBuilder: (context, index) {
-  //                   Expense expense = entry.value[index];
-  //                   return ListTile(
-  //                     leading:
-  //                         Icon(Icons.monetization_on, color: Colors.deepPurple),
-  //                     title: Text(
-  //                         "${expense.payee} - \$${expense.amount.toStringAsFixed(2)}"),
-  //                     subtitle: Text(DateFormat('MMM dd, yyyy')
-  //                         .format(expense.date)),
-  //                   );
-  //                 },
-  //               ),
-  //             ],
-  //           );
-  //         }).toList(),
-  //       );
-  //     },
-  //   );
-  // }
+        // Group entries by projectId
+        final grouped = groupBy<TimeEntry, String>(
+          provider.entries,
+          (e) => e.projectId,
+        );
+        return ListView(
+          children:
+              grouped.entries.map((group) {
+                final projectName = getProjectNameById(context, group.key);
+                final totalHours = group.value.fold<double>(
+                  0,
+                  (sum, e) => sum + e.totalTime,
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "$projectName — Total: ${totalHours.toStringAsFixed(2)} hrs",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ),
+                    ListView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: group.value.length,
+                      itemBuilder: (context, idx) {
+                        final entry = group.value[idx];
+                        final dateLabel = DateFormat(
+                          'MMM dd, yyyy',
+                        ).format(entry.date);
+                        return ListTile(
+                          leading: Icon(
+                            Icons.access_time,
+                            color: Colors.deepPurple,
+                          ),
+                          title: Text(
+                            "${entry.totalTime.toStringAsFixed(2)} hrs — ${getTaskNameById(context, entry.taskId)}",
+                          ),
+                          subtitle: Text(dateLabel),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              }).toList(),
+        );
+      },
+    );
+  }
 
-  // home_screen.dart
-  // String getCategoryNameById(BuildContext context, String categoryId) {
-  //   var category = Provider.of<TimeEntryProvider>(context, listen: false)
-  //       .categories
-  //       .firstWhere((cat) => cat.id == categoryId);
-  //   return category.name;
-  // }
+  String getProjectNameById(BuildContext context, String projectId) {
+    final project = Provider.of<TimeEntryProvider>(
+      context,
+      listen: false,
+    ).projects.firstWhere(
+      (p) => p.id == projectId,
+      orElse: () => Project(id: '', name: 'Unknown'),
+    );
+    return project.name;
+  }
+
+  String getTaskNameById(BuildContext context, String taskId) {
+    final task = Provider.of<TimeEntryProvider>(
+      context,
+      listen: false,
+    ).tasks.firstWhere(
+      (t) => t.id == taskId,
+      orElse: () => Task(id: '', name: '—'),
+    );
+    return task.name;
+  }
 }

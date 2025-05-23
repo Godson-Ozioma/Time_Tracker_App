@@ -25,7 +25,6 @@ class TimeEntry {
       date: DateTime.parse(json['date']),
     );
   }
-
   // Convert an Expense instance to a JSON object
   Map<String, dynamic> toJson() {
     return {
